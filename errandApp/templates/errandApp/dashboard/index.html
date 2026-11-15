@@ -1,0 +1,891 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back! Here's your errand activity overview{% endblock %}
+
+{% block breadcrumb_active %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--card-color) 0%, transparent 100%);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--card-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-card.primary {
+        --card-color: #6366f1;
+    }
+
+    .stat-card.success {
+        --card-color: #10b981;
+    }
+
+    .stat-card.warning {
+        --card-color: #f59e0b;
+    }
+
+    .stat-card.danger {
+        --card-color: #ef4444;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .stat-card.primary .stat-icon {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .stat-card.success .stat-icon {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .stat-card.warning .stat-icon {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .stat-card.danger .stat-icon {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .stat-trend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .stat-trend.up {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .stat-trend.down {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #94a3b8;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .stat-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #334155;
+    }
+
+    .stat-link {
+        color: var(--card-color);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: gap 0.2s;
+    }
+
+    .stat-link:hover {
+        gap: 8px;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .action-card {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #fff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .action-card:hover {
+        transform: translateY(-3px);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-color: #6366f1;
+    }
+
+    .action-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 12px;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #6366f1;
+    }
+
+    .action-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .action-subtitle {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+    /* Content Cards */
+    .content-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 30px;
+    }
+
+    .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-title i {
+        color: #6366f1;
+    }
+
+    .card-action {
+        color: #6366f1;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+
+    .card-action:hover {
+        color: #8b5cf6;
+    }
+
+    /* Recent Errands List */
+    .errand-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .errand-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .errand-item:hover {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: #6366f1;
+    }
+
+    .errand-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: rgba(99, 102, 241, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .errand-icon-wrapper i {
+        font-size: 20px;
+        color: #6366f1;
+    }
+
+    .errand-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .errand-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .errand-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    .errand-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .errand-status {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .errand-status.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .errand-status.in-progress {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .errand-status.completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .errand-status.cancelled {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 16px;
+        position: relative;
+    }
+
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: 40px;
+        width: 2px;
+        height: calc(100% + 20px);
+        background: #334155;
+    }
+
+    .activity-item:last-child::before {
+        display: none;
+    }
+
+    .activity-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.1);
+        border: 2px solid #334155;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        z-index: 1;
+    }
+
+    .activity-icon-wrapper i {
+        font-size: 16px;
+        color: #6366f1;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .activity-description {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+
+    .activity-time {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 20px;
+    }
+
+    /* Responsive Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 1200px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stat-value {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .errand-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .empty-state-icon i {
+        font-size: 40px;
+        color: #6366f1;
+    }
+
+    .empty-state-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+        font-size: 14px;
+        color: #94a3b8;
+        margin-bottom: 20px;
+    }
+
+    .btn-primary-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #6366f1;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+
+    .btn-primary-custom:hover {
+        background: #4f46e5;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-header">
+            <div class="stat-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Errands</div>
+        <div class="stat-value">{{ total_errands|default:"0" }}</div>
+        <div class="stat-footer">
+            <span style="font-size: 13px; color: #94a3b8;">
+                <i class="fas fa-clock"></i> {{ pending_errands|default:"0" }} pending
+            </span>
+            <a href="{% url 'my_errands' %}" class="stat-link">
+                View all <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="stat-card success">
+        <div class="stat-header">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-value">{{ completed_errands|default:"0" }}</div>
+        <div class="stat-footer">
+            <span style="font-size: 13px; color: #94a3b8;">
+                <i class="fas fa-calendar"></i> This month
+            </span>
+            <a href="{% url 'my_errands' %}?status=completed" class="stat-link">
+                View all <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="stat-card warning">
+        <div class="stat-header">
+            <div class="stat-icon">
+                <i class="fas fa-spinner"></i>
+            </div>
+        </div>
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value">{{ in_progress_errands|default:"0" }}</div>
+        <div class="stat-footer">
+            <span style="font-size: 13px; color: #94a3b8;">
+                <i class="fas fa-running"></i> Active errands
+            </span>
+            <a href="{% url 'my_errands' %}" class="stat-link">
+                View all <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="stat-card danger">
+        <div class="stat-header">
+            <div class="stat-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-value">₦{{ total_spent|default:"0"|floatformat:0 }}</div>
+        <div class="stat-footer">
+            <span style="font-size: 13px; color: #94a3b8;">
+                <i class="fas fa-chart-line"></i> vs last month
+            </span>
+            <a href="{% url 'wallet' %}" class="stat-link">
+                Details <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="content-card">
+    <div class="card-header-custom">
+        <h2 class="card-title">
+            <i class="fas fa-bolt"></i>
+            Quick Actions
+        </h2>
+    </div>
+    <div class="quick-actions">
+        <a href="{% url 'create_errand' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="action-title">Create Errand</div>
+            <div class="action-subtitle">Post a new errand</div>
+        </a>
+
+        <a href="{% url 'available_errands' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="action-title">Find Errands</div>
+            <div class="action-subtitle">Browse available tasks</div>
+        </a>
+
+        <a href="{% url 'runner_dashboard' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-running"></i>
+            </div>
+            <div class="action-title">Runner Mode</div>
+            <div class="action-subtitle">Start earning today</div>
+        </a>
+
+        <a href="{% url 'wallet' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="action-title">My Wallet</div>
+            <div class="action-subtitle">Manage payments</div>
+        </a>
+
+        <a href="{% url 'my_errands' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="action-title">Reviews</div>
+            <div class="action-subtitle">View ratings</div>
+        </a>
+
+        <a href="{% url 'account_settings' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-cog"></i>
+            </div>
+            <div class="action-title">Settings</div>
+            <div class="action-subtitle">Account preferences</div>
+        </a>
+    </div>
+</div>
+
+<!-- Dashboard Grid -->
+<div class="dashboard-grid">
+    <!-- Recent Errands -->
+    <div class="content-card">
+        <div class="card-header-custom">
+            <h2 class="card-title">
+                <i class="fas fa-list"></i>
+                Recent Errands
+            </h2>
+            <a href="{% url 'my_errands' %}" class="card-action">View All</a>
+        </div>
+
+        {% if recent_errands %}
+        <div class="errand-list">
+            {% for errand in recent_errands %}
+            <a href="{% url 'errand_detail' errand.id %}" class="errand-item">
+                <div class="errand-icon-wrapper">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="errand-details">
+                    <div class="errand-title">{{ errand.title }}</div>
+                    <div class="errand-meta">
+                        <span>
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ errand.pickup_address|truncatechars:34 }}
+                        </span>
+                        <span>
+                            <i class="fas fa-clock"></i>
+                            {{ errand.created_at|timesince }} ago
+                        </span>
+                    </div>
+                </div>
+                <div class="errand-status {{ errand.status_css_class }}">
+                    {{ errand.get_status_display }}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <div class="empty-state-title">No errands yet</div>
+            <div class="empty-state-text">Create your first errand to get started</div>
+            <a href="{% url 'create_errand' %}" class="btn-primary-custom">
+                <i class="fas fa-plus"></i>
+                Create Errand
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Wallet & Runner -->
+    <div class="content-card">
+        <div class="card-header-custom">
+            <h2 class="card-title">
+                <i class="fas fa-wallet"></i>
+                Wallet
+            </h2>
+            <a href="{% url 'wallet' %}" class="card-action">Open</a>
+        </div>
+
+        <div class="activity-timeline">
+            <div class="activity-item">
+                <div class="activity-icon-wrapper">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Total spent</div>
+                    <div class="activity-description">₦{{ total_spent|floatformat:0 }} on completed errands</div>
+                </div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon-wrapper">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Need something done?</div>
+                    <div class="activity-description">Post an errand and a runner will pick it up.</div>
+                    <a href="{% url 'create_errand' %}" class="stat-link" style="margin-top:8px;display:inline-flex;">
+                        Create errand <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            {% if not is_runner %}
+            <div class="activity-item">
+                <div class="activity-icon-wrapper">
+                    <i class="fas fa-running"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Earn as a runner</div>
+                    <div class="activity-description">Accept errands near you and get paid on delivery.</div>
+                    <form method="post" action="{% url 'become_runner' %}" style="margin-top:8px;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-primary-custom" style="border:0;cursor:pointer;">
+                            <i class="fas fa-running"></i> Become a runner
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Performance Charts -->
+<div class="dashboard-grid">
+    <div class="content-card">
+        <div class="card-header-custom">
+            <h2 class="card-title">
+                <i class="fas fa-chart-line"></i>
+                Errand Trends
+            </h2>
+            <div>
+                <select class="form-select form-select-sm" style="background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; color: #fff; padding: 6px 12px; border-radius: 6px;">
+                    <option>Last 7 days</option>
+                    <option>Last 30 days</option>
+                    <option>Last 3 months</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="errandTrendsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header-custom">
+            <h2 class="card-title">
+                <i class="fas fa-chart-pie"></i>
+                Errand Status
+            </h2>
+        </div>
+        <div class="chart-container">
+            <canvas id="errandStatusChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Errand Trends Chart
+    const trendsCtx = document.getElementById('errandTrendsChart');
+    if (trendsCtx) {
+        new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: {{ trend_labels|safe }},
+                datasets: [{
+                    label: 'Errands Posted',
+                    data: {{ trend_posted|safe }},
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Errands Completed',
+                    data: {{ trend_completed|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#cbd5e1'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(51, 65, 85, 0.5)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(51, 65, 85, 0.5)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Errand Status Chart
+    const statusCtx = document.getElementById('errandStatusChart');
+    if (statusCtx) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'In Progress', 'Pending', 'Cancelled'],
+                datasets: [{
+                    data: {{ status_counts|safe }},
+                    backgroundColor: [
+                        '#10b981',
+                        '#3b82f6',
+                        '#f59e0b',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#cbd5e1',
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

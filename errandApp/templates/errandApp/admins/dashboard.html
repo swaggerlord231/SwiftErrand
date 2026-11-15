@@ -1,0 +1,113 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Admin Overview{% endblock %}
+{% block page_title %}Admin Overview{% endblock %}
+{% block page_subtitle %}Platform activity at a glance{% endblock %}
+{% block breadcrumb_active %}Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 26px; }
+    .admin-stat {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155; border-radius: 14px; padding: 20px;
+    }
+    .admin-stat .label { color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
+    .admin-stat .value { color: #fff; font-size: 30px; font-weight: 800; margin-top: 6px; }
+    .admin-stat .value.money { color: #10b981; font-size: 24px; }
+    .admin-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
+    @media (max-width: 1100px) { .admin-grid { grid-template-columns: 1fr; } }
+    .admin-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155; border-radius: 16px; padding: 22px;
+    }
+    .admin-card h2 { color: #fff; font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .admin-card h2 i { color: #6366f1; }
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th { text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; padding: 8px; border-bottom: 1px solid #334155; }
+    .admin-table td { color: #cbd5e1; font-size: 13px; padding: 10px 8px; border-bottom: 1px solid rgba(51,65,85,.6); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table a { color: #a5b4fc; text-decoration: none; }
+    .quick-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .quick-link {
+        display: flex; align-items: center; gap: 10px; padding: 14px;
+        background: rgba(99,102,241,.1); border: 1px solid #334155; border-radius: 10px;
+        color: #cbd5e1; text-decoration: none; font-weight: 600; font-size: 14px;
+    }
+    .quick-link:hover { background: rgba(99,102,241,.2); color: #fff; }
+    .quick-link i { color: #6366f1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-stats">
+    <div class="admin-stat"><div class="label">Users</div><div class="value">{{ total_users }}</div></div>
+    <div class="admin-stat"><div class="label">Runners</div><div class="value">{{ total_runners }}</div></div>
+    <div class="admin-stat"><div class="label">Errands</div><div class="value">{{ total_errands }}</div></div>
+    <div class="admin-stat"><div class="label">Pending</div><div class="value">{{ pending_errands }}</div></div>
+    <div class="admin-stat"><div class="label">Completed</div><div class="value">{{ completed_errands }}</div></div>
+    <div class="admin-stat"><div class="label">Transactions</div><div class="value">{{ total_transactions }}</div></div>
+    <div class="admin-stat"><div class="label">Gross revenue</div><div class="value money">₦{{ gross_revenue|floatformat:2 }}</div></div>
+    <div class="admin-stat"><div class="label">Commission</div><div class="value money">₦{{ platform_commission|floatformat:2 }}</div></div>
+</div>
+
+<div class="admin-grid">
+    <div class="admin-card">
+        <h2><i class="fas fa-list"></i> Recent errands</h2>
+        {% if recent_errands %}
+        <table class="admin-table">
+            <thead><tr><th>#</th><th>Title</th><th>Customer</th><th>Runner</th><th>Status</th><th>Price</th></tr></thead>
+            <tbody>
+                {% for errand in recent_errands %}
+                <tr>
+                    <td><a href="{% url 'errand_detail' errand.id %}">#{{ errand.id }}</a></td>
+                    <td>{{ errand.title|truncatechars:28 }}</td>
+                    <td>{{ errand.customer.username }}</td>
+                    <td>{% if errand.runner %}{{ errand.runner.username }}{% else %}—{% endif %}</td>
+                    <td>{{ errand.get_status_display }}</td>
+                    <td>₦{{ errand.price|floatformat:0 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color:#64748b;">No errands yet.</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <div class="admin-card" style="margin-bottom:24px;">
+            <h2><i class="fas fa-bolt"></i> Quick links</h2>
+            <div class="quick-links">
+                <a class="quick-link" href="{% url 'admin_users' %}"><i class="fas fa-users"></i> Users</a>
+                <a class="quick-link" href="{% url 'admin_runners' %}"><i class="fas fa-running"></i> Runners</a>
+                <a class="quick-link" href="{% url 'admin_errands' %}"><i class="fas fa-tasks"></i> Errands</a>
+                <a class="quick-link" href="{% url 'admin_transactions' %}"><i class="fas fa-money-bill"></i> Transactions</a>
+                <a class="quick-link" href="{% url 'admin_disputes' %}"><i class="fas fa-scale-balanced"></i> Disputes</a>
+                <a class="quick-link" href="/admin/"><i class="fas fa-gear"></i> Django admin</a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h2><i class="fas fa-receipt"></i> Recent transactions</h2>
+            {% if recent_transactions %}
+            <table class="admin-table">
+                <thead><tr><th>User</th><th>Type</th><th>Amount</th></tr></thead>
+                <tbody>
+                    {% for tx in recent_transactions %}
+                    <tr>
+                        <td>{{ tx.wallet.user.username }}</td>
+                        <td>{{ tx.get_type_display }}</td>
+                        <td>₦{{ tx.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:#64748b;">No transactions yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

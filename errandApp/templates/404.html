@@ -1,0 +1,21 @@
+{% extends "errandApp/base.html" %}
+
+{% block title %}Page not found — Swift Errand{% endblock %}
+
+{% block content %}
+<section class="content-section bg-light">
+    <div class="container px-4 px-lg-5 text-center">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-lg-8">
+                <div class="display-1 fw-bold text-primary">404</div>
+                <h2 class="mb-3">We could not find that page.</h2>
+                <p class="lead text-muted mb-4">
+                    The link may be broken, or the page may have moved. Head back to the
+                    homepage and pick up where you left off.
+                </p>
+                <a class="btn btn-primary btn-xl" href="{% url 'home' %}">Back to home</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

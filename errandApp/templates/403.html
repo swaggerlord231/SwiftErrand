@@ -1,0 +1,21 @@
+{% extends "errandApp/base.html" %}
+
+{% block title %}Access denied — Swift Errand{% endblock %}
+
+{% block content %}
+<section class="content-section bg-light">
+    <div class="container px-4 px-lg-5 text-center">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-lg-8">
+                <div class="display-1 fw-bold text-danger">403</div>
+                <h2 class="mb-3">You do not have access to this page.</h2>
+                <p class="lead text-muted mb-4">
+                    If you think this is a mistake, sign in with the right account or
+                    contact support.
+                </p>
+                <a class="btn btn-primary btn-xl" href="{% url 'dashboard' %}">Go to dashboard</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

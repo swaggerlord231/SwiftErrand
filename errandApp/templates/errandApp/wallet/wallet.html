@@ -1,0 +1,234 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}My Wallet{% endblock %}
+{% block page_title %}My Wallet{% endblock %}
+{% block page_subtitle %}Fund errands, withdraw earnings and track every movement{% endblock %}
+{% block breadcrumb_active %}Wallet{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wallet-hero {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-radius: 18px;
+        padding: 32px;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        box-shadow: 0 14px 40px rgba(99, 102, 241, .25);
+    }
+    .wallet-hero .label { text-transform: uppercase; letter-spacing: 1px; font-size: 12px; opacity: .85; }
+    .wallet-hero .balance { font-size: 44px; font-weight: 800; line-height: 1.1; margin-top: 6px; }
+    .wallet-hero .who { font-size: 14px; opacity: .9; }
+    .wallet-hero-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; min-width: 190px; }
+    .wallet-hero-actions .label { text-align: right; margin-bottom: 2px; }
+    .hero-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: #fff; color: #4338ca; border: 0; border-radius: 10px;
+        padding: 12px 20px; font-weight: 700; font-size: 15px; text-decoration: none;
+    }
+    .hero-btn:hover { background: #eef2ff; color: #3730a3; }
+    .hero-btn.secondary {
+        background: rgba(255, 255, 255, .16); color: #fff;
+        border: 1px solid rgba(255, 255, 255, .45);
+    }
+    .hero-btn.secondary:hover { background: rgba(255, 255, 255, .28); color: #fff; }
+
+    .wallet-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .wallet-forms { grid-template-columns: 1fr; } }
+
+    .wallet-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155; border-radius: 16px; padding: 24px;
+        scroll-margin-top: 90px;
+    }
+    .wallet-card h2 { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .wallet-card .card-hint { color: #94a3b8; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+
+    .wallet-field { margin-bottom: 14px; }
+    .wallet-field label { display: block; color: #cbd5e1; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .wallet-input {
+        width: 100%; background: rgba(30, 41, 59, .5); border: 1px solid #334155;
+        color: #fff; padding: 11px 14px; border-radius: 9px; font-size: 14px;
+    }
+    .wallet-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    .wallet-input::placeholder { color: #64748b; }
+    .field-error { color: #f87171; font-size: 12px; margin-top: 5px; }
+    .quick-amounts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .quick-amount {
+        background: rgba(99, 102, 241, .12); color: #a5b4fc; border: 1px solid #334155;
+        border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .quick-amount:hover { background: rgba(99, 102, 241, .25); color: #fff; }
+    .wallet-submit {
+        width: 100%; border: 0; border-radius: 9px; padding: 12px 18px;
+        color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+    }
+    .wallet-submit.deposit { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .wallet-submit.deposit:hover { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+    .wallet-submit.withdraw { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+    .wallet-submit.withdraw:hover { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+    .wallet-note {
+        background: rgba(99, 102, 241, .08); border: 1px solid rgba(99, 102, 241, .25);
+        color: #c7d2fe; border-radius: 10px; padding: 12px 14px; font-size: 12px;
+        line-height: 1.6; margin-top: 16px;
+    }
+
+    .tx-table { width: 100%; border-collapse: collapse; }
+    .tx-table th {
+        text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase;
+        letter-spacing: .5px; padding: 10px 12px; border-bottom: 1px solid #334155;
+    }
+    .tx-table td { padding: 14px 12px; border-bottom: 1px solid rgba(51,65,85,.6); color: #cbd5e1; font-size: 14px; }
+    .tx-table tr:last-child td { border-bottom: none; }
+    .amount.credit { color: #10b981; font-weight: 700; }
+    .amount.debit { color: #f87171; font-weight: 700; }
+    .pill { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .pill.credit { background: rgba(16,185,129,.12); color: #34d399; }
+    .pill.debit { background: rgba(239,68,68,.12); color: #f87171; }
+    .muted { color: #64748b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wallet-hero">
+    <div>
+        <div class="label">Available balance</div>
+        <div class="balance">₦{{ wallet.balance|floatformat:2 }}</div>
+        <div class="who">@{{ request.user.username }} · {{ transactions|length }} transaction{{ transactions|length|pluralize }}</div>
+    </div>
+    <div class="wallet-hero-actions">
+        <div class="label">Quick actions</div>
+        <a href="#deposit" class="hero-btn"><i class="fas fa-plus"></i> Deposit</a>
+        <a href="#withdraw" class="hero-btn secondary"><i class="fas fa-arrow-down"></i> Withdraw</a>
+    </div>
+</div>
+
+<div class="wallet-forms">
+    <!-- Deposit -->
+    <div class="wallet-card" id="deposit">
+        <h2><i class="fas fa-circle-plus" style="color:#10b981;"></i> Deposit funds</h2>
+        <p class="card-hint">
+            Add money to your wallet. The price of an errand is held from your
+            balance when you post it, so top up before creating an errand.
+        </p>
+
+        <div class="quick-amounts">
+            <button type="button" class="quick-amount" data-amount="1000">₦1,000</button>
+            <button type="button" class="quick-amount" data-amount="5000">₦5,000</button>
+            <button type="button" class="quick-amount" data-amount="10000">₦10,000</button>
+        </div>
+
+        <form method="post" action="{% url 'wallet_deposit' %}">
+            {% csrf_token %}
+            <div class="wallet-field">
+                <label for="{{ deposit_form.amount.id_for_label }}">Amount (NGN)</label>
+                {{ deposit_form.amount }}
+                {% for error in deposit_form.amount.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+            <button type="submit" class="wallet-submit deposit">
+                <i class="fas fa-plus"></i> Add to wallet
+            </button>
+        </form>
+
+        <div class="wallet-note">
+            <i class="fas fa-circle-info"></i>
+            Deposits are credited instantly in this environment. Connect a payment
+            provider such as Paystack or Flutterwave to accept live card and bank payments.
+        </div>
+    </div>
+
+    <!-- Withdraw -->
+    <div class="wallet-card" id="withdraw">
+        <h2><i class="fas fa-arrow-down" style="color:#a5b4fc;"></i> Withdraw funds</h2>
+        <p class="card-hint">
+            Move available funds to your bank account. You can withdraw up to
+            ₦{{ wallet.balance|floatformat:2 }} right now.
+        </p>
+
+        <form method="post" action="{% url 'wallet_withdraw' %}">
+            {% csrf_token %}
+            <div class="wallet-field">
+                <label for="{{ withdraw_form.amount.id_for_label }}">Amount (NGN)</label>
+                {{ withdraw_form.amount }}
+                {% for error in withdraw_form.amount.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="wallet-field">
+                <label for="{{ withdraw_form.bank_name.id_for_label }}">Bank</label>
+                {{ withdraw_form.bank_name }}
+                {% for error in withdraw_form.bank_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="wallet-field">
+                <label for="{{ withdraw_form.account_name.id_for_label }}">Account name</label>
+                {{ withdraw_form.account_name }}
+                {% for error in withdraw_form.account_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="wallet-field">
+                <label for="{{ withdraw_form.account_number.id_for_label }}">Account number</label>
+                {{ withdraw_form.account_number }}
+                {% for error in withdraw_form.account_number.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+            <button type="submit" class="wallet-submit withdraw">
+                <i class="fas fa-arrow-down"></i> Withdraw to bank
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="wallet-card">
+    <h2><i class="fas fa-receipt"></i> Transaction history</h2>
+
+    {% if transactions %}
+    <div style="overflow-x:auto;">
+        <table class="tx-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Errand</th>
+                    <th>Type</th>
+                    <th style="text-align:right;">Amount</th>
+                    <th style="text-align:right;">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.created_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ tx.description|default:"Wallet transaction" }}</td>
+                    <td>
+                        {% if tx.errand %}
+                        <a href="{% url 'errand_detail' tx.errand.id %}" style="color:#a5b4fc;">#{{ tx.errand.id }}</a>
+                        {% else %}<span class="muted">—</span>{% endif %}
+                    </td>
+                    <td><span class="pill {{ tx.type }}">{{ tx.get_type_display }}</span></td>
+                    <td class="amount {{ tx.type }}" style="text-align:right;">{% if tx.type == 'credit' %}+{% else %}-{% endif %}₦{{ tx.amount|floatformat:2 }}</td>
+                    <td style="text-align:right;">₦{{ tx.balance_after|default:wallet.balance|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted" style="margin:0;">No transactions yet. Deposit funds, post an errand or complete an errand as a runner to see activity here.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.quick-amount').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var input = document.querySelector('#deposit input[name="amount"]');
+            if (input) {
+                input.value = button.dataset.amount;
+                input.focus();
+            }
+        });
+    });
+</script>
+{% endblock %}

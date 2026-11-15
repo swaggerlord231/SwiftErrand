@@ -1,0 +1,44 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Disputes{% endblock %}
+{% block page_title %}Disputes{% endblock %}
+{% block page_subtitle %}Resolve disagreements between customers and runners{% endblock %}
+{% block breadcrumb_active %}Disputes{% endblock %}
+
+{% block content %}
+<div class="admin-page-card">
+    {% if disputes %}
+    <div class="admin-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dispute in disputes %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ dispute.title }}</td>
+                    <td>{{ dispute.description }}</td>
+                    <td>{{ dispute.status }}</td>
+                    <td>{{ dispute.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+        <i class="fas fa-scale-balanced"></i>
+        <p style="color:#fff;font-weight:700;margin-bottom:6px;">No disputes to review</p>
+        <p style="margin:0;">Disputes are created when a customer or runner reports a problem with a completed errand. There are none right now.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

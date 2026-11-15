@@ -1,0 +1,74 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Errands{% endblock %}
+{% block page_title %}Errands{% endblock %}
+{% block page_subtitle %}Every errand posted on the platform{% endblock %}
+{% block breadcrumb_active %}Errands{% endblock %}
+
+{% block content %}
+<div class="admin-page-card">
+    <form method="get" class="admin-toolbar">
+        <div class="field">
+            <label for="search">Search</label>
+            <input id="search" type="text" name="search" placeholder="Title, address or username" value="{{ search }}">
+        </div>
+        <div class="field">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All statuses</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if active_status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field" style="flex:0;flex-direction:row;align-items:center;">
+            <button type="submit" class="btn-apply"><i class="fas fa-search"></i> Filter</button>
+            <a href="{% url 'admin_errands' %}" class="btn-clear">Clear</a>
+        </div>
+    </form>
+
+    <div class="admin-count"><strong>{{ errands.count }}</strong> errand{{ errands.count|pluralize }}</div>
+
+    {% if errands %}
+    <div class="admin-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Customer</th>
+                    <th>Runner</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for errand in errands %}
+                <tr>
+                    <td>{{ errand.id }}</td>
+                    <td>
+                        <strong style="color:#fff;">{{ errand.title|default:"Untitled errand"|truncatechars:34 }}</strong>
+                        <div style="color:#64748b;font-size:12px;">{{ errand.pickup_address|truncatechars:38 }}</div>
+                    </td>
+                    <td>{{ errand.customer.username }}</td>
+                    <td>{% if errand.runner %}{{ errand.runner.username }}{% else %}—{% endif %}</td>
+                    <td>₦{{ errand.price|floatformat:0 }}</td>
+                    <td><span class="badge-status {{ errand.status_css_class }}">{{ errand.get_status_display }}</span></td>
+                    <td>{{ errand.created_at|date:"M d, Y" }}</td>
+                    <td><a href="{% url 'errand_detail' errand.id %}">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+        <i class="fas fa-tasks"></i>
+        <p>No errands match your filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

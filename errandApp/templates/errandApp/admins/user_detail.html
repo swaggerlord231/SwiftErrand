@@ -1,0 +1,116 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}User — {{ user_obj.username }}{% endblock %}
+{% block page_title %}{{ user_obj.display_name }}{% endblock %}
+{% block page_subtitle %}@{{ user_obj.username }}{% endblock %}
+{% block breadcrumb_active %}Users{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="admin-page-card">
+            <h2 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:18px;">
+                <i class="fas fa-user-pen" style="color:var(--primary-color);"></i> Account details
+            </h2>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" style="color:#cbd5e1;font-weight:600;">Username</label>
+                    <input class="form-control" type="text" value="{{ user_obj.username }}" disabled
+                           style="background:rgba(30,41,59,.4);border:1px solid #334155;color:#94a3b8;">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color:#cbd5e1;font-weight:600;">Email</label>
+                    <input class="form-control" type="email" name="email" value="{{ user_obj.email }}"
+                           style="background:rgba(30,41,59,.5);border:1px solid #334155;color:#fff;">
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="is_runner" id="is_runner" {% if user_obj.is_runner %}checked{% endif %}>
+                    <label class="form-check-label" for="is_runner" style="color:#cbd5e1;">Runner account</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if user_obj.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active" style="color:#cbd5e1;">Active account</label>
+                </div>
+
+                <button type="submit" class="btn-apply" style="background:var(--primary-color);color:#fff;border:0;border-radius:8px;padding:11px 20px;font-weight:600;">
+                    <i class="fas fa-save"></i> Save changes
+                </button>
+            </form>
+
+            <hr style="border-color:#334155;margin:22px 0;">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                    <div style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Wallet balance</div>
+                    <div style="color:#10b981;font-size:20px;font-weight:800;">
+                        ₦{% if wallet %}{{ wallet.balance|floatformat:2 }}{% else %}0.00{% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Joined</div>
+                    <div style="color:#cbd5e1;font-weight:600;">{{ user_obj.date_joined|date:"M d, Y" }}</div>
+                </div>
+                <div>
+                    <div style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Active errands</div>
+                    <div style="color:#fff;font-weight:800;font-size:20px;">{{ active_errands }}</div>
+                </div>
+                <div>
+                    <div style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Successful errands</div>
+                    <div style="color:#fff;font-weight:800;font-size:20px;">{{ errands_success }}</div>
+                </div>
+            </div>
+
+            {% if runner_profile %}
+            <div style="margin-top:18px;">
+                <span class="badge-status {% if runner_profile.verified %}completed{% else %}pending{% endif %}">
+                    {% if runner_profile.verified %}Verified runner{% else %}Runner verification pending{% endif %}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="admin-page-card">
+            <h2 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:18px;">
+                <i class="fas fa-tasks" style="color:var(--primary-color);"></i> Errands by this user
+            </h2>
+
+            {% if errands %}
+            <div class="admin-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Pickup</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for errand in errands %}
+                        <tr>
+                            <td><a href="{% url 'errand_detail' errand.id %}">{{ errand.id }}</a></td>
+                            <td>{{ errand.title|default:"Untitled"|truncatechars:26 }}</td>
+                            <td>{{ errand.pickup_address|truncatechars:24 }}</td>
+                            <td><span class="badge-status {{ errand.status_css_class }}">{{ errand.get_status_display }}</span></td>
+                            <td>₦{{ errand.price|floatformat:0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="admin-empty">
+                <i class="fas fa-inbox"></i>
+                <p>This user has not created any errands.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

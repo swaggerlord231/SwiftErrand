@@ -1,0 +1,957 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="Swift Errand - Professional Errand Management Dashboard">
+    <meta name="author" content="Swift Errand">
+    <title>{% block title %}Dashboard{% endblock %} - Swift Errand</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #0f172a;
+            --sidebar-width: 280px;
+            --topbar-height: 64px;
+            --text-light: #94a3b8;
+            --text-dark: #1e293b;
+            --border-color: #334155;
+            --card-bg: #1e293b;
+            --hover-bg: #243447;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f172a;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Topbar */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--topbar-height);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1e293b 100%);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            transition: left 0.3s ease;
+        }
+
+        .topbar.sidebar-open {
+            left: var(--sidebar-width);
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 700;
+            margin-right: auto;
+        }
+
+        .topbar-brand i {
+            color: var(--primary-color);
+            font-size: 28px;
+        }
+
+        .topbar-brand span {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            margin-right: 16px;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Search Bar */
+        .topbar-search {
+            display: flex;
+            align-items: center;
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 16px;
+            margin: 0 20px;
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .topbar-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #fff;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .topbar-search input::placeholder {
+            color: var(--text-light);
+        }
+
+        .topbar-search i {
+            color: var(--text-light);
+            margin-right: 10px;
+        }
+
+        /* User Menu */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid var(--border-color);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .user-avatar i {
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            min-width: 220px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .user-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-dropdown-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .user-dropdown-email {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .user-dropdown-item:hover {
+            background-color: var(--hover-bg);
+            color: #fff;
+        }
+
+        .user-dropdown-item i {
+            width: 20px;
+            color: var(--primary-color);
+        }
+
+        .user-dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 8px 0;
+        }
+
+        .user-dropdown-item.logout {
+            color: #fca5a5;
+        }
+
+        .user-dropdown-item.logout i {
+            color: #ef4444;
+        }
+
+        form.user-dropdown-form {
+            margin: 0;
+        }
+
+        button.user-dropdown-item {
+            width: 100%;
+            background: none;
+            border: 0;
+            text-align: left;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: var(--topbar-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--topbar-height));
+            background: linear-gradient(180deg, var(--secondary-color) 0%, #1a2332 100%);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 999;
+            transition: transform 0.3s ease;
+            padding: 20px 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-heading {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 20px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            position: relative;
+            font-size: 15px;
+        }
+
+        .sidebar-link:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
+            color: #fff;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .sidebar-link i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-link-text {
+            flex: 1;
+        }
+
+        .sidebar-link-arrow {
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: var(--text-light);
+        }
+
+        .sidebar-link.expanded .sidebar-link-arrow {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-submenu.expanded {
+            max-height: 500px;
+        }
+
+        .sidebar-submenu-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 10px 56px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .sidebar-submenu-link:hover {
+            color: #fff;
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .sidebar-submenu-link.active {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .sidebar-submenu-link::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--text-light);
+        }
+
+        .sidebar-submenu-link.active::before {
+            background-color: var(--primary-color);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .sidebar-footer-text {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .sidebar-footer-user {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: var(--topbar-height);
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            min-height: calc(100vh - var(--topbar-height));
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .breadcrumb-item {
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb-item.active {
+            color: #fff;
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-light);
+        }
+
+        /* Footer */
+        .main-footer {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1a2332 100%);
+            border-top: 1px solid var(--border-color);
+            padding: 24px 30px;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-footer.expanded {
+            margin-left: 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-text {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary-color);
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--topbar-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .topbar {
+                left: 0 !important;
+            }
+
+            .topbar-brand {
+                margin-right: 0;
+            }
+
+            .topbar-search {
+                display: none;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-footer {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .topbar-brand span {
+                display: none;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* Additional Block Styles */
+
+        /* Shared admin tables */
+        .admin-page-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px;
+        }
+        .admin-toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+        .admin-toolbar .field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 170px; }
+        .admin-toolbar label { color: var(--text-light); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+        .admin-toolbar input, .admin-toolbar select {
+            background: rgba(30, 41, 59, .5);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .admin-toolbar input:focus, .admin-toolbar select:focus { outline: none; border-color: var(--primary-color); }
+        .admin-toolbar select option { background: #1e293b; }
+        .admin-toolbar .btn-apply {
+            background: var(--primary-color); color: #fff; border: 0; border-radius: 8px;
+            padding: 10px 20px; font-weight: 600;
+        }
+        .admin-toolbar .btn-apply:hover { background: var(--primary-dark); }
+        .admin-toolbar .btn-clear { color: var(--text-light); text-decoration: none; padding: 10px 12px; }
+        .admin-scroll { overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th {
+            text-align: left; color: var(--text-light); font-size: 12px; text-transform: uppercase;
+            letter-spacing: .5px; padding: 10px 12px; border-bottom: 1px solid var(--border-color); white-space: nowrap;
+        }
+        .admin-table td {
+            color: #cbd5e1; font-size: 14px; padding: 13px 12px;
+            border-bottom: 1px solid rgba(51, 65, 85, .6); vertical-align: middle;
+        }
+        .admin-table tbody tr:last-child td { border-bottom: none; }
+        .admin-table tbody tr:hover { background: rgba(99, 102, 241, .06); }
+        .admin-table a { color: #a5b4fc; text-decoration: none; }
+        .admin-table a:hover { color: #fff; }
+        .admin-count { color: var(--text-light); font-size: 14px; margin-bottom: 16px; }
+        .admin-count strong { color: #fff; }
+        .admin-empty { text-align: center; padding: 48px 20px; color: var(--text-light); }
+        .admin-empty i { font-size: 42px; color: var(--primary-color); display: block; margin-bottom: 14px; }
+        .badge-status {
+            display: inline-block; padding: 5px 12px; border-radius: 999px;
+            font-size: 12px; font-weight: 700; white-space: nowrap;
+        }
+        .badge-status.pending { background: rgba(245,158,11,.12); color: #f59e0b; }
+        .badge-status.in-progress { background: rgba(59,130,246,.12); color: #60a5fa; }
+        .badge-status.completed { background: rgba(16,185,129,.12); color: #10b981; }
+        .badge-status.cancelled { background: rgba(239,68,68,.12); color: #f87171; }
+        .pill.credit { background: rgba(16,185,129,.12); color: #34d399; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .pill.debit { background: rgba(239,68,68,.12); color: #f87171; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="topbar" id="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <a href="{% url 'dashboard' %}" class="topbar-brand">
+            <i class="fas fa-bolt"></i>
+            <span>Swift Errand</span>
+        </a>
+
+        <div class="topbar-search">
+            <form action="{% url 'my_errands' %}" method="get" style="display:flex;align-items:center;width:100%;margin:0;">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" placeholder="Search my errands..." value="{{ request.GET.search }}">
+            </form>
+        </div>
+
+        <div class="user-menu">
+            <div class="user-avatar" id="userAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-dropdown-header">
+                    <div class="user-dropdown-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="user-dropdown-email">{{ request.user.email }}</div>
+                </div>
+                <a href="{% url 'account_settings' %}" class="user-dropdown-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Account Settings</span>
+                </a>
+                <a href="{% url 'wallet' %}" class="user-dropdown-item">
+                    <i class="fas fa-wallet"></i>
+                    <span>My Wallet</span>
+                </a>
+                <a href="{% url 'my_errands' %}" class="user-dropdown-item">
+                    <i class="fas fa-history"></i>
+                    <span>My Errands</span>
+                </a>
+                <div class="user-dropdown-divider"></div>
+                <form method="post" action="{% url 'logout' %}" class="user-dropdown-form">
+                    {% csrf_token %}
+                    <button type="submit" class="user-dropdown-item logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-heading">Core</div>
+            <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i>
+                <span class="sidebar-link-text">Dashboard</span>
+            </a>
+        </div>
+
+        {% if request.user.is_superuser or request.user.is_staff %}
+        <div class="sidebar-section">
+            <div class="sidebar-heading">Administration</div>
+            <a href="#" class="sidebar-link" data-submenu="admin">
+                <i class="fas fa-users-cog"></i>
+                <span class="sidebar-link-text">Admin Panel</span>
+                <i class="fas fa-chevron-down sidebar-link-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="submenu-admin">
+                <a href="{% url 'admin_dashboard' %}" class="sidebar-submenu-link">Overview</a>
+                <a href="{% url 'admin_users' %}" class="sidebar-submenu-link">Users</a>
+                <a href="{% url 'admin_runners' %}" class="sidebar-submenu-link">Runners</a>
+                <a href="{% url 'admin_errands' %}" class="sidebar-submenu-link">Errands</a>
+                <a href="{% url 'admin_transactions' %}" class="sidebar-submenu-link">Transactions</a>
+                <a href="{% url 'admin_disputes' %}" class="sidebar-submenu-link">Disputes</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="sidebar-section">
+            <div class="sidebar-heading">Runner</div>
+            <a href="#" class="sidebar-link" data-submenu="runner">
+                <i class="fas fa-running"></i>
+                <span class="sidebar-link-text">Runner Tools</span>
+                <i class="fas fa-chevron-down sidebar-link-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="submenu-runner">
+                <a href="{% url 'runner_dashboard' %}" class="sidebar-submenu-link">Runner Dashboard</a>
+                <a href="{% url 'available_errands' %}" class="sidebar-submenu-link">Available Errands</a>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-heading">Errands</div>
+            <a href="#" class="sidebar-link" data-submenu="errands">
+                <i class="fas fa-tasks"></i>
+                <span class="sidebar-link-text">My Errands</span>
+                <i class="fas fa-chevron-down sidebar-link-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="submenu-errands">
+                <a href="{% url 'create_errand' %}" class="sidebar-submenu-link">Create Errand</a>
+                <a href="{% url 'my_errands' %}" class="sidebar-submenu-link">View Errands</a>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-heading">More</div>
+            <a href="{% url 'wallet' %}" class="sidebar-link">
+                <i class="fas fa-wallet"></i>
+                <span class="sidebar-link-text">Wallet</span>
+            </a>
+            <a href="{% url 'account_settings' %}" class="sidebar-link">
+                <i class="fas fa-user-cog"></i>
+                <span class="sidebar-link-text">Settings</span>
+            </a>
+            <a href="{% url 'home' %}" class="sidebar-link">
+                <i class="fas fa-house"></i>
+                <span class="sidebar-link-text">Public Site</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-text">Logged in as:</div>
+            <div class="sidebar-footer-user">{{ request.user.username }}</div>
+        </div>
+    </aside>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block page_header %}
+        <div class="page-header">
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            <p class="page-subtitle">{% block page_subtitle %}Welcome back! Here's what's happening today.{% endblock %}</p>
+            {% block breadcrumb %}
+            <div class="breadcrumb">
+                <a href="{% url 'dashboard' %}" class="breadcrumb-item">Home</a>
+                <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                <span class="breadcrumb-item active">{% block breadcrumb_active %}Dashboard{% endblock %}</span>
+            </div>
+            {% endblock %}
+        </div>
+        {% endblock %}
+
+        {% block content %}
+        <!-- Page content goes here -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer" id="mainFooter">
+        <div class="footer-content">
+            <div class="footer-text">
+                &copy; {% now "Y" %} Swift Errand. All rights reserved.
+            </div>
+            <div class="footer-links">
+                <a href="{% url 'home' %}" class="footer-link">Home</a>
+                <a href="{% url 'account_settings' %}" class="footer-link">Settings</a>
+                <a href="{% url 'wallet' %}" class="footer-link">Wallet</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Sidebar Toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mainContent = document.getElementById('mainContent');
+        const mainFooter = document.getElementById('mainFooter');
+        const topbar = document.getElementById('topbar');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            
+            if (window.innerWidth > 1024) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                mainFooter.classList.toggle('expanded');
+            }
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Submenu Toggle
+        const submenuLinks = document.querySelectorAll('.sidebar-link[data-submenu]');
+        
+        submenuLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const submenuId = 'submenu-' + link.dataset.submenu;
+                const submenu = document.getElementById(submenuId);
+                
+                link.classList.toggle('expanded');
+                submenu.classList.toggle('expanded');
+            });
+        });
+
+        // User Dropdown
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userDropdown.contains(e.target) && !userAvatar.contains(e.target)) {
+                userDropdown.classList.remove('active');
+            }
+        });
+
+        // Active Link Detection
+        const currentPath = window.location.pathname;
+        const sidebarLinks = document.querySelectorAll('.sidebar-link, .sidebar-submenu-link');
+        
+        sidebarLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+                
+                // Expand parent submenu if it's a submenu link
+                if (link.classList.contains('sidebar-submenu-link')) {
+                    const submenu = link.closest('.sidebar-submenu');
+                    if (submenu) {
+                        submenu.classList.add('expanded');
+                        const parentLink = submenu.previousElementSibling;
+                        if (parentLink) {
+                            parentLink.classList.add('expanded');
+                        }
+                    }
+                }
+            }
+        });
+
+        // Responsive handling
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

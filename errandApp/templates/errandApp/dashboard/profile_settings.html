@@ -1,0 +1,159 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Account Settings{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+{% block page_subtitle %}Manage your profile, password and account preferences{% endblock %}
+{% block breadcrumb_active %}Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 24px;
+    }
+    .settings-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 28px;
+    }
+    .settings-card h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .settings-card h2 i { color: #6366f1; }
+    .settings-card p.hint { color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
+    .settings-card .form-control {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        color: #fff;
+        padding: 11px 14px;
+        border-radius: 8px;
+    }
+    .settings-card .form-control:focus {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: #6366f1;
+        color: #fff;
+        box-shadow: none;
+    }
+    .settings-card label {
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    .settings-card .errorlist {
+        color: #fca5a5;
+        font-size: 13px;
+        margin: 6px 0 0;
+        padding-left: 18px;
+    }
+    .settings-card .helptext { color: #64748b; font-size: 12px; }
+    .settings-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+    .btn-save {
+        background: #6366f1; color: #fff; border: 0; border-radius: 8px;
+        padding: 11px 22px; font-weight: 600; cursor: pointer;
+    }
+    .btn-save:hover { background: #4f46e5; }
+    .btn-link { color: #cbd5e1; text-decoration: none; padding: 11px 8px; }
+    .btn-link:hover { color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-grid">
+    <div class="settings-card">
+        <h2><i class="fas fa-user"></i> Profile</h2>
+        <p class="hint">Update the details shown on your account.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if profile_form.non_field_errors %}
+                <div class="alert alert-danger">{{ profile_form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in profile_form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}{{ field.errors }}{% endif %}
+                {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="settings-actions">
+                <button type="submit" class="btn-save">Save profile</button>
+                <a href="{% url 'wallet' %}" class="btn-link">View wallet</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="settings-card">
+        <h2><i class="fas fa-lock"></i> Password</h2>
+        <p class="hint">Use a strong password you do not use anywhere else.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="password">
+            {% if password_form.non_field_errors %}
+                <div class="alert alert-danger">{{ password_form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in password_form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}{{ field.errors }}{% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="settings-actions">
+                <button type="submit" class="btn-save">Change password</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="settings-card">
+        <h2><i class="fas fa-running"></i> Runner account</h2>
+        <p class="hint">
+            {% if request.user.is_runner %}
+                You are registered as a runner and can accept errands.
+            {% else %}
+                Register as a runner to earn money by completing errands.
+            {% endif %}
+        </p>
+        {% if request.user.is_runner %}
+            <div class="settings-actions">
+                <a href="{% url 'runner_dashboard' %}" class="btn-save" style="text-decoration:none;">Runner dashboard</a>
+                <a href="{% url 'available_errands' %}" class="btn-link">Browse errands</a>
+            </div>
+        {% else %}
+            <form method="post" action="{% url 'become_runner' %}">
+                {% csrf_token %}
+                <div class="settings-actions">
+                    <button type="submit" class="btn-save">Become a runner</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="settings-card">
+        <h2><i class="fas fa-shield-halved"></i> Security</h2>
+        <p class="hint">Manage how you sign in and keep your account safe.</p>
+        <div class="settings-actions">
+            <a href="{% url 'password_reset' %}" class="btn-link">Reset password by email</a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-link" style="border:0;background:none;cursor:pointer;">Log out</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Rate Runner{% endblock %}
+{% block page_title %}Rate Your Runner{% endblock %}
+{% block page_subtitle %}How did {{ errand.runner.display_name }} do?{% endblock %}
+{% block breadcrumb_active %}Rate Runner{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="content-card" style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border:1px solid #334155;border-radius:16px;padding:28px;">
+            <h2 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:6px;">{{ errand.title }}</h2>
+            <p style="color:#94a3b8;font-size:14px;margin-bottom:22px;">
+                Completed {{ errand.completed_at|date:"M d, Y" }} · ₦{{ errand.price|floatformat:0 }}
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" style="color:#cbd5e1;font-weight:600;margin-bottom:6px;display:block;">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}<div style="color:#fca5a5;font-size:13px;">{{ field.errors }}</div>{% endif %}
+                </div>
+                {% endfor %}
+
+                <div style="display:flex;gap:12px;margin-top:20px;">
+                    <button type="submit" style="background:#6366f1;color:#fff;border:0;border-radius:8px;padding:12px 24px;font-weight:600;cursor:pointer;">
+                        <i class="fas fa-star"></i> Submit review
+                    </button>
+                    <a href="{% url 'errand_detail' errand.id %}" style="color:#cbd5e1;padding:12px 8px;text-decoration:none;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_rating, #id_comment {
+        width: 100%;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 8px;
+    }
+    #id_rating:focus, #id_comment:focus { outline: none; border-color: #6366f1; }
+    #id_rating option { background: #1e293b; }
+</style>
+{% endblock %}

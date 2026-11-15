@@ -1,0 +1,1029 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Errand Details{% endblock %}
+
+{% block page_title %}Errand Details{% endblock %}
+{% block page_subtitle %}View and manage your errand information{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb">
+    <a href="{% url 'dashboard' %}" class="breadcrumb-item">Home</a>
+    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+    <a href="{% url 'my_errands' %}" class="breadcrumb-item">My Errands</a>
+    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+    <span class="breadcrumb-item active">#ERR-{{ errand.id|stringformat:"04d" }}</span>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    /* Status Header */
+    .status-header {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .status-info {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .status-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .status-icon.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .status-icon.accepted {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .status-icon.in-progress {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+    }
+
+    .status-icon.completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-icon.cancelled {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .status-content h2 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .status-badge-large.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-badge-large.accepted,
+    .status-badge-large.in-progress {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .status-badge-large.completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-badge-large.cancelled {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge-large i {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .errand-id-badge {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #6366f1;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    /* Content Card */
+    .content-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 28px;
+    }
+
+    .card-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .card-title i {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    /* Location Cards */
+    .location-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .location-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--location-color) 0%, transparent 100%);
+    }
+
+    .location-card.pickup {
+        --location-color: #3b82f6;
+    }
+
+    .location-card.dropoff {
+        --location-color: #10b981;
+    }
+
+    .location-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .location-icon-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .location-card.pickup .location-icon-badge {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .location-card.dropoff .location-icon-badge {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .location-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .location-address {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        line-height: 1.5;
+    }
+
+    .location-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #334155;
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    .location-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Description Section */
+    .description-box {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .description-text {
+        font-size: 15px;
+        color: #cbd5e1;
+        line-height: 1.8;
+        white-space: pre-wrap;
+    }
+
+    /* Task photos */
+    .photo-hint {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .photo-link {
+        display: block;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #334155;
+        background: rgba(30, 41, 59, 0.5);
+        aspect-ratio: 4 / 3;
+    }
+
+    .photo-link:hover {
+        border-color: #6366f1;
+    }
+
+    .photo-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.25s ease;
+        display: block;
+    }
+
+    .photo-link:hover .photo-thumb {
+        transform: scale(1.04);
+    }
+
+    /* Info Row */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #334155;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-size: 14px;
+        color: #94a3b8;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-label i {
+        color: #6366f1;
+        width: 20px;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .price-value {
+        font-size: 28px;
+        color: #10b981;
+        font-weight: 700;
+    }
+
+    /* Runner Card */
+    .runner-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .runner-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .runner-info {
+        flex: 1;
+    }
+
+    .runner-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .runner-meta {
+        font-size: 13px;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .runner-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .runner-rating {
+        color: #f59e0b;
+    }
+
+    .runner-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .runner-contact-btn {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid #334155;
+        color: #6366f1;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .runner-contact-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: #6366f1;
+        color: #6366f1;
+    }
+
+    .not-assigned {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 32px;
+        text-align: center;
+    }
+
+    .not-assigned i {
+        font-size: 48px;
+        color: #64748b;
+    }
+
+    .not-assigned-text {
+        font-size: 15px;
+        color: #94a3b8;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 32px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #334155;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 24px;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -28px;
+        top: 4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid #334155;
+        background: #0f172a;
+    }
+
+    .timeline-marker.active {
+        background: #6366f1;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
+
+    .timeline-marker.completed {
+        background: #10b981;
+        border-color: #10b981;
+    }
+
+    .timeline-content {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    .timeline-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .timeline-time {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn-primary-custom {
+        flex: 1;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: #fff;
+        border: none;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary-custom:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        color: #fff;
+    }
+
+    .btn-secondary-custom {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        border: 1px solid #334155;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: #6366f1;
+        color: #6366f1;
+    }
+
+    .btn-danger-custom {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid #7f1d1d;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-danger-custom:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .status-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-primary-custom,
+        .btn-secondary-custom,
+        .btn-danger-custom {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <!-- Status Header -->
+    <div class="status-header">
+        <div class="status-info">
+            <div class="status-icon {{ errand.status_css_class }}">
+                {% if errand.status == 'pending' %}
+                    <i class="fas fa-clock"></i>
+                {% elif errand.status == 'accepted' or errand.status == 'pickup' or errand.status == 'transit' %}
+                    <i class="fas fa-running"></i>
+                {% elif errand.status == 'delivered' or errand.status == 'completed' %}
+                    <i class="fas fa-check-circle"></i>
+                {% else %}
+                    <i class="fas fa-times-circle"></i>
+                {% endif %}
+            </div>
+            <div class="status-content">
+                <h2>Errand Status</h2>
+                <span class="status-badge-large {{ errand.status_css_class }}">
+                    <i class="fas fa-circle"></i>
+                    {{ errand.get_status_display }}
+                </span>
+            </div>
+        </div>
+        <div class="errand-id-badge">
+            #ERR-{{ errand.id|stringformat:"04d" }}
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Main Content -->
+        <div>
+            <!-- Locations -->
+            <div class="content-card">
+                <h3 class="card-title">
+                    <i class="fas fa-map-marked-alt"></i>
+                    Location Details
+                </h3>
+
+                <div class="location-card pickup">
+                    <div class="location-header">
+                        <div class="location-icon-badge">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <div class="location-label">Pickup Location</div>
+                            <div class="location-address">{{ errand.pickup_address }}</div>
+                        </div>
+                    </div>
+                    <div class="location-meta">
+                        <span>
+                            <i class="fas fa-clock"></i>
+                            {{ errand.created_at|date:"M d, Y" }}
+                        </span>
+                        <span>
+                            <i class="fas fa-map"></i>
+                            View on Map
+                        </span>
+                    </div>
+                </div>
+
+                <div class="location-card dropoff">
+                    <div class="location-header">
+                        <div class="location-icon-badge">
+                            <i class="fas fa-flag-checkered"></i>
+                        </div>
+                        <div>
+                            <div class="location-label">Drop-off Location</div>
+                            <div class="location-address">{{ errand.dropoff_address }}</div>
+                        </div>
+                    </div>
+                    <div class="location-meta">
+                        <span>
+                            <i class="fas fa-route"></i>
+                            Get Directions
+                        </span>
+                        <span>
+                            <i class="fas fa-map"></i>
+                            View on Map
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="content-card">
+                <h3 class="card-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    Errand Description
+                </h3>
+                <div class="description-box">
+                    <p class="description-text">{{ errand.description }}</p>
+                </div>
+            </div>
+
+            {% if errand.has_visible_images %}
+            <!-- Task Photos -->
+            <div class="content-card">
+                <h3 class="card-title">
+                    <i class="fas fa-images"></i>
+                    Task Photos
+                </h3>
+                <p class="photo-hint">Photos attached to help the runner understand the task. Click a photo to open it full size.</p>
+                <div class="photo-grid">
+                    {% for image in errand.images.all %}
+                        {% if image.file_exists %}
+                        <a href="{{ image.image.url }}" target="_blank" rel="noopener" class="photo-link">
+                            <img src="{{ image.image.url }}" alt="Photo for {{ errand.title }}" class="photo-thumb" loading="lazy">
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Runner Information -->
+            <div class="content-card">
+                <h3 class="card-title">
+                    <i class="fas fa-user-circle"></i>
+                    Runner Information
+                </h3>
+
+                {% if errand.runner %}
+                    <div class="runner-card">
+                        <div class="runner-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="runner-info">
+                            <div class="runner-name">{{ errand.runner.get_full_name|default:errand.runner.username }}</div>
+                            <div class="runner-meta">
+                                <span class="runner-rating">
+                                    <i class="fas fa-star"></i>
+                                    {% if review %}{{ review.rating }}.0{% else %}New runner{% endif %}
+                                </span>
+                                <span>
+                                    <i class="fas fa-check-circle"></i>
+                                    {% if errand.runner.runner_profile.verified %}Verified{% else %}Runner{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="runner-actions">
+                            {% if errand.runner.phone %}
+                            <a href="tel:{{ errand.runner.phone }}" class="runner-contact-btn">
+                                <i class="fas fa-phone"></i>
+                                Call
+                            </a>
+                            {% else %}
+                            <span class="runner-contact-btn" style="opacity:.5;cursor:not-allowed;" title="No phone number on file">
+                                <i class="fas fa-phone"></i>
+                                Call
+                            </span>
+                            {% endif %}
+                            {% if errand.runner.email %}
+                            <a href="mailto:{{ errand.runner.email }}" class="runner-contact-btn">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </a>
+                            {% else %}
+                            <span class="runner-contact-btn" style="opacity:.5;cursor:not-allowed;" title="No email on file">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="not-assigned">
+                        <i class="fas fa-user-slash"></i>
+                        <p class="not-assigned-text">
+                            No runner has been assigned to this errand yet.<br>
+                            We'll notify you once a runner accepts.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Errand Information -->
+            <div class="content-card">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Errand Details
+                </h3>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Price
+                    </span>
+                    <span class="price-value">₦{{ errand.price|floatformat:0 }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-calendar"></i>
+                        Created
+                    </span>
+                    <span class="info-value">{{ errand.created_at|date:"M d, Y" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-clock"></i>
+                        Time
+                    </span>
+                    <span class="info-value">{{ errand.created_at|date:"h:i A" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-user"></i>
+                        Posted By
+                    </span>
+                    <span class="info-value">{{ errand.customer.display_name }}</span>
+                </div>
+
+                {% if errand.category %}
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-tag"></i>
+                        Category
+                    </span>
+                    <span class="info-value">{{ errand.category|title }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Progress Timeline -->
+            <div class="content-card">
+                <h3 class="card-title">
+                    <i class="fas fa-history"></i>
+                    Progress Timeline
+                </h3>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker completed"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Errand Created</div>
+                            <div class="timeline-time">{{ errand.created_at|date:"M d, Y h:i A" }}</div>
+                        </div>
+                    </div>
+
+                    {% if errand.runner %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker {% if errand.status == 'accepted' %}completed{% endif %}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Runner Assigned</div>
+                            <div class="timeline-time">{{ errand.runner.username }} accepted</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if errand.status == 'transit' %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker active"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">In Progress</div>
+                            <div class="timeline-time">Runner is on the way</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if errand.status == 'delivered' or errand.status == 'completed' %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker completed"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">{% if errand.status == 'completed' %}Completed{% else %}Delivered{% endif %}</div>
+                            <div class="timeline-time">{{ errand.completed_at|default:errand.delivered_at|date:"M d, Y h:i A" }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if errand.status == 'cancelled' %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Cancelled</div>
+                            <div class="timeline-time">Errand was cancelled</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{% url 'my_errands' %}" class="btn-secondary-custom">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Errands
+                </a>
+            </div>
+
+            {# ================= CUSTOMER ACTIONS ================= #}
+
+            {% if errand.status == 'pending' and is_customer %}
+            <div class="action-buttons">
+                <a href="{% url 'edit_errand' errand.id %}" class="btn-primary-custom">
+                    <i class="fas fa-edit"></i>
+                    Edit Errand
+                </a>
+
+                <form method="post" action="{% url 'cancel_errand' errand.id %}"
+                      onsubmit="return confirm('Are you sure you want to cancel this errand?')"
+                      style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger-custom" style="width:100%;border:0;cursor:pointer;">
+                        <i class="fas fa-times"></i>
+                        Cancel Errand
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+
+            {% if can_review %}
+            <div class="action-buttons">
+                <a href="{% url 'rate_runner' errand.id %}" class="btn-primary-custom">
+                    <i class="fas fa-star"></i>
+                    Rate Runner
+                </a>
+            </div>
+            {% endif %}
+
+
+            {# ================= RUNNER ACTIONS ================= #}
+
+            {% if errand.status == 'pending' and request.user.is_runner %}
+            <div class="action-buttons">
+                <form method="post" action="{% url 'accept_errand' errand.id %}" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-success-custom" style="width:100%;border:0;cursor:pointer;">
+                        <i class="fas fa-check"></i>
+                        Accept Errand
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+
+            {% if is_runner and errand.status == 'accepted' %}
+            <div class="action-buttons">
+                <form method="post" action="{% url 'start_pickup' errand.id %}" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary-custom" style="width:100%;border:0;cursor:pointer;">
+                        <i class="fas fa-play"></i>
+                        On My Way to Pickup
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+
+            {% if is_runner and errand.status == 'pickup' %}
+            <div class="action-buttons">
+                <form method="post" action="{% url 'picked_up' errand.id %}" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-info-custom" style="width:100%;border:0;cursor:pointer;">
+                        <i class="fas fa-box"></i>
+                        Picked Up &amp; Delivering
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+
+            {% if is_runner and errand.status == 'transit' %}
+            <div class="action-buttons">
+                <form method="post" action="{% url 'mark_delivered' errand.id %}" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary-custom" style="width:100%;border:0;cursor:pointer;">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Mark as Delivered
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            {# ================= CUSTOMER CONFIRMATION ================= #}
+
+
+            {% if errand.status == 'delivered' and is_customer %}
+            <div class="action-buttons">
+                <form method="post" action="{% url 'confirm_received' errand.id %}" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-success-custom" style="width:100%;border:0;cursor:pointer;">
+                        <i class="fas fa-check-circle"></i>
+                        I Have Received My Items
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

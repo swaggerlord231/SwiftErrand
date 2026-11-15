@@ -1,0 +1,90 @@
+{% extends "errandApp/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="content-section bg-light" id="about">
+    <div class="container px-4 px-lg-5 text-center">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-lg-10">
+                <h2>Everyday errands, handled quickly and safely.</h2>
+                <p class="lead mb-5">
+                    Swift Errand connects people who need something done with trusted local runners.
+                    Post a delivery, shopping trip, pickup or courier job, set your price, and track it
+                    from acceptance to delivery — all in one place.
+                </p>
+                <a class="btn btn-dark btn-xl" href="{% url 'register' %}">Create a free account</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content-section bg-primary text-white text-center" id="services">
+    <div class="container px-4 px-lg-5">
+        <div class="content-section-heading">
+            <h3 class="text-secondary mb-0">Services</h3>
+            <h2 class="mb-5">What we handle</h2>
+        </div>
+        <div class="row gx-4 gx-lg-5">
+            <div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
+                <span class="service-icon rounded-circle mx-auto mb-3"><i class="fas fa-box"></i></span>
+                <h4><strong>Deliveries</strong></h4>
+                <p class="text-faded mb-0">Send packages across town with live status updates.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
+                <span class="service-icon rounded-circle mx-auto mb-3"><i class="fas fa-cart-shopping"></i></span>
+                <h4><strong>Shopping</strong></h4>
+                <p class="text-faded mb-0">Have a runner buy and deliver what you need.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5 mb-md-0">
+                <span class="service-icon rounded-circle mx-auto mb-3"><i class="fas fa-location-dot"></i></span>
+                <h4><strong>Pickups</strong></h4>
+                <p class="text-faded mb-0">Collect items from stores, offices or friends.</p>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <span class="service-icon rounded-circle mx-auto mb-3"><i class="fas fa-motorcycle"></i></span>
+                <h4><strong>Courier</strong></h4>
+                <p class="text-faded mb-0">Urgent documents and parcels delivered fast.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content-section" id="how-it-works">
+    <div class="container px-4 px-lg-5">
+        <div class="content-section-heading text-center">
+            <h3 class="text-secondary mb-0">How it works</h3>
+            <h2 class="mb-5">Three simple steps</h2>
+        </div>
+        <div class="row gx-4 gx-lg-5 text-center">
+            <div class="col-lg-4 mb-4">
+                <div class="h1 text-primary mb-2">1</div>
+                <h4><strong>Post your errand</strong></h4>
+                <p class="text-muted">Describe the task, add pickup and drop-off addresses, and set a fair price.</p>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="h1 text-primary mb-2">2</div>
+                <h4><strong>A runner accepts</strong></h4>
+                <p class="text-muted">Verified runners near you accept the errand and keep you updated at every step.</p>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="h1 text-primary mb-2">3</div>
+                <h4><strong>Confirm and review</strong></h4>
+                <p class="text-muted">Confirm delivery, release payment from the wallet, and rate your runner.</p>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a class="btn btn-primary btn-xl" href="{% url 'register' %}">Get started</a>
+        </div>
+    </div>
+</section>
+
+<section class="callout" id="contact">
+    <div class="container px-4 px-lg-5 text-center">
+        <h2 class="mx-auto mb-5">Ready to get something done?<br><em>Swift Errand is one click away.</em></h2>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a class="btn btn-primary btn-xl" href="{% url 'create_errand' %}">Post an errand</a>
+            <a class="btn btn-dark btn-xl" href="{% url 'register' %}">Become a runner</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

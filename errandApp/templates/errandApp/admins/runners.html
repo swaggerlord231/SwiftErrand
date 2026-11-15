@@ -1,0 +1,75 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Runners{% endblock %}
+{% block page_title %}Runners{% endblock %}
+{% block page_subtitle %}Everyone who delivers errands on the platform{% endblock %}
+{% block breadcrumb_active %}Runners{% endblock %}
+
+{% block content %}
+<div class="admin-page-card">
+    <form method="get" class="admin-toolbar">
+        <div class="field">
+            <label for="search">Search</label>
+            <input id="search" type="text" name="search" placeholder="Username or email" value="{{ search }}">
+        </div>
+        <div class="field">
+            <label for="verified">Verification</label>
+            <select id="verified" name="verified">
+                <option value="">All runners</option>
+                <option value="yes" {% if verified == 'yes' %}selected{% endif %}>Verified</option>
+                <option value="no" {% if verified == 'no' %}selected{% endif %}>Not verified</option>
+            </select>
+        </div>
+        <div class="field" style="flex:0;flex-direction:row;align-items:center;">
+            <button type="submit" class="btn-apply"><i class="fas fa-search"></i> Filter</button>
+            <a href="{% url 'admin_runners' %}" class="btn-clear">Clear</a>
+        </div>
+    </form>
+
+    <div class="admin-count"><strong>{{ runners.count }}</strong> runner{{ runners.count|pluralize }}</div>
+
+    {% if runners %}
+    <div class="admin-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Runner</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Verified</th>
+                    <th>Wallet balance</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for runner in runners %}
+                <tr>
+                    <td>
+                        <strong style="color:#fff;">{{ runner.user.display_name }}</strong>
+                        <div style="color:#64748b;font-size:12px;">@{{ runner.user.username }}</div>
+                    </td>
+                    <td>{{ runner.user.email|default:"—" }}</td>
+                    <td>{{ runner.user.phone|default:"—" }}</td>
+                    <td>
+                        {% if runner.verified %}
+                        <span class="badge-status completed">Verified</span>
+                        {% else %}
+                        <span class="badge-status pending">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>₦{{ runner.user.wallet.balance|default:"0.00"|floatformat:2 }}</td>
+                    <td><a href="{% url 'admin_user_detail' runner.user.id %}">Manage</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+        <i class="fas fa-running"></i>
+        <p>No runners match your filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

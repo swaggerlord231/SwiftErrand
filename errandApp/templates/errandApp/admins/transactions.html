@@ -1,0 +1,77 @@
+{% extends "errandApp/base_dash.html" %}
+{% load static %}
+
+{% block title %}Transactions{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+{% block page_subtitle %}Every wallet credit and debit on the platform{% endblock %}
+{% block breadcrumb_active %}Transactions{% endblock %}
+
+{% block content %}
+<div class="admin-page-card">
+    <form method="get" class="admin-toolbar">
+        <div class="field">
+            <label for="search">Search</label>
+            <input id="search" type="text" name="search" placeholder="Username or description" value="{{ search }}">
+        </div>
+        <div class="field">
+            <label for="type">Type</label>
+            <select id="type" name="type">
+                <option value="">All types</option>
+                {% for value, label in type_choices %}
+                <option value="{{ value }}" {% if active_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field" style="flex:0;flex-direction:row;align-items:center;">
+            <button type="submit" class="btn-apply"><i class="fas fa-search"></i> Filter</button>
+            <a href="{% url 'admin_transactions' %}" class="btn-clear">Clear</a>
+        </div>
+    </form>
+
+    <div class="admin-count"><strong>{{ transactions.count }}</strong> transaction{{ transactions.count|pluralize }}</div>
+
+    {% if transactions %}
+    <div class="admin-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Description</th>
+                    <th>Errand</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Balance after</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.id }}</td>
+                    <td>{{ transaction.wallet.user.username }}</td>
+                    <td>{{ transaction.description|default:"—"|truncatechars:44 }}</td>
+                    <td>
+                        {% if transaction.errand %}
+                        <a href="{% url 'errand_detail' transaction.errand.id %}">#{{ transaction.errand.id }}</a>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td><span class="pill {{ transaction.type }}">{{ transaction.get_type_display }}</span></td>
+                    <td style="color:{% if transaction.type == 'credit' %}#34d399{% else %}#f87171{% endif %};font-weight:700;">
+                        {% if transaction.type == 'credit' %}+{% else %}-{% endif %}₦{{ transaction.amount|floatformat:2 }}
+                    </td>
+                    <td>₦{{ transaction.balance_after|default:"—"|floatformat:2 }}</td>
+                    <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+        <i class="fas fa-receipt"></i>
+        <p>No transactions match your filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

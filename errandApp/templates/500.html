@@ -1,0 +1,20 @@
+{% extends "errandApp/base.html" %}
+
+{% block title %}Something went wrong — Swift Errand{% endblock %}
+
+{% block content %}
+<section class="content-section bg-light">
+    <div class="container px-4 px-lg-5 text-center">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-lg-8">
+                <div class="display-1 fw-bold text-danger">500</div>
+                <h2 class="mb-3">Something went wrong on our side.</h2>
+                <p class="lead text-muted mb-4">
+                    We have been notified. Please try again in a moment.
+                </p>
+                <a class="btn btn-primary btn-xl" href="{% url 'home' %}">Back to home</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
